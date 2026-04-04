@@ -1,6 +1,7 @@
 import { DashboardLayout } from "@/components/dashboard/layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatDateRelative } from "@/lib/utils"
+import { prisma } from "@/lib/db/prisma"
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -8,83 +9,157 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowUpRight,
-  ArrowDownRight 
 } from "lucide-react"
 import { ExpenseCard } from "@/components/expenses/expense-card"
-import { StatusBadge } from "@/components/status-badge"
 
-// Mock data - replace with actual data fetching
-const stats = {
-  totalMonthly: 1245000,
-  pendingAmount: 320000,
-  paidThisMonth: 925000,
-  pendingCount: 4,
-  budgetUsedPercent: 85,
-  totalChange: 12,
-  pendingChange: -5,
+// Types based on Prisma schema
+interface Expense {
+  id: string
+  branchId: string
+  createdBy: string
+  categoryId: string | null
+  title: string
+  description: string | null
+  amount: number
+  currency: string
+  status: 'pending' | 'funds_assigned' | 'paid' | 'cancelled'
+  expenseDate: Date
+  dueDate: Date | null
+  paidAt: Date | null
+  paymentMethod: string | null
+  paidBy: string | null
+  isSplit: boolean
+  splitType: string | null
+  tags: string[]
+  location: Record<string, any> | null
+  metadata: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
+  category?: { name: string; color: string } | null
+  branch?: { name: string } | null
 }
 
-const recentExpenses = [
-  {
-    id: "1",
-    branchId: "1",
-    createdBy: "1",
-    title: "Arriendo Departamento",
-    amount: 450000,
-    currency: "CLP",
-    status: "pending",
-    expenseDate: new Date("2026-01-15"),
-    dueDate: new Date("2026-01-20"),
-    isSplit: false,
-    tags: [],
-    metadata: {},
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    category: { name: "Vivienda", color: "#6366f1" },
-  },
-  {
-    id: "2",
-    branchId: "1",
-    createdBy: "1",
-    title: "Supermercado Lider",
-    amount: 85000,
-    currency: "CLP",
-    status: "paid",
-    expenseDate: new Date("2026-01-14"),
-    paidAt: new Date("2026-01-14"),
-    isSplit: true,
-    tags: [],
-    metadata: {},
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    category: { name: "Alimentación", color: "#10b981" },
-  },
-  {
-    id: "3",
-    branchId: "1",
-    createdBy: "1",
-    title: "Internet Hogar",
-    amount: 35000,
-    currency: "CLP",
-    status: "funds_assigned",
-    expenseDate: new Date("2026-01-13"),
-    dueDate: new Date("2026-01-25"),
-    isSplit: false,
-    tags: [],
-    metadata: {},
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    category: { name: "Servicios", color: "#f59e0b" },
-  },
-]
+interface Activity {
+  id: string
+  branchId: string | null
+  userId: string | null
+  type: string
+  entityType: string | null
+  entityId: string | null
+  title: string
+  description: string | null
+  metadata: Record<string, any>
+  createdAt: Date
+  user?: { firstName: string; lastName: string } | null
+}
 
-const activities = [
-  { id: "1", title: "Juan agregó Supermercado", amount: 85000, time: "hace 2h", type: "expense" },
-  { id: "2", title: "Pago confirmado: Luz", amount: 45000, time: "hace 5h", type: "payment" },
-  { id: "3", title: "Boleta cargada: Internet", amount: null, time: "hace 1d", type: "document" },
-]
+interface ExpenseWithRelations extends Expense {
+  category: { name: string; color: string } | null
+  branch: { name: string } | null
+}
 
-export default function DashboardPage() {
+interface ActivityWithUser extends Activity {
+  user: { firstName: string; lastName: string } | null
+}
+
+async function getDashboardStats() {
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+
+  const [
+    totalThisMonth,
+    totalLastMonth,
+    pendingAmount,
+    paidThisMonth,
+    pendingCount,
+    recentExpenses,
+    pendingExpenses,
+    activities,
+  ] = await Promise.all([
+    prisma.expense.aggregate({
+      where: {
+        expenseDate: { gte: startOfMonth },
+        status: { not: 'cancelled' },
+      },
+      _sum: { amount: true },
+    }),
+    prisma.expense.aggregate({
+      where: {
+        expenseDate: { gte: startOfLastMonth, lte: endOfLastMonth },
+        status: { not: 'cancelled' },
+      },
+      _sum: { amount: true },
+    }),
+    prisma.expense.aggregate({
+      where: { status: 'pending' },
+      _sum: { amount: true },
+    }),
+    prisma.expense.aggregate({
+      where: {
+        status: 'paid',
+        paidAt: { gte: startOfMonth },
+      },
+      _sum: { amount: true },
+    }),
+    prisma.expense.count({
+      where: { status: 'pending' },
+    }),
+    prisma.expense.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        category: true,
+        branch: true,
+      },
+    }) as Promise<ExpenseWithRelations[]>,
+    prisma.expense.findMany({
+      where: {
+        status: 'pending',
+        dueDate: { not: null, gte: now },
+      },
+      orderBy: { dueDate: 'asc' },
+      take: 5,
+    }),
+    prisma.activity.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { firstName: true, lastName: true } },
+      },
+    }) as Promise<ActivityWithUser[]>,
+  ])
+
+  const currentTotal = Number(totalThisMonth._sum.amount || 0)
+  const lastTotal = Number(totalLastMonth._sum.amount || 0)
+  const changePercent = lastTotal > 0 
+    ? Math.round(((currentTotal - lastTotal) / lastTotal) * 100) 
+    : 0
+
+  return {
+    stats: {
+      totalMonthly: currentTotal,
+      pendingAmount: Number(pendingAmount._sum.amount || 0),
+      paidThisMonth: Number(paidThisMonth._sum.amount || 0),
+      pendingCount,
+      budgetUsedPercent: currentTotal > 0 ? 85 : 0,
+      totalChange: changePercent,
+    },
+    recentExpenses,
+    pendingExpenses,
+    activities: activities.map((a: ActivityWithUser) => ({
+      id: a.id,
+      title: a.title,
+      time: formatDateRelative(a.createdAt),
+      type: a.type,
+    })),
+  }
+}
+
+export default async function DashboardPage() {
+  const { stats, recentExpenses, pendingExpenses, activities } = await getDashboardStats()
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -93,7 +168,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground mt-1">
-              Resumen financiero de Casa Principal
+              Resumen financiero de todas tus sucursales
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -120,8 +195,10 @@ export default function DashboardPage() {
                 {formatCurrency(stats.totalMonthly)}
               </div>
               <div className="flex items-center gap-1 mt-1">
-                <ArrowUpRight className="h-3 w-3 text-status-paid" />
-                <span className="text-xs text-status-paid">+{stats.totalChange}%</span>
+                <ArrowUpRight className={`h-3 w-3 ${stats.totalChange >= 0 ? 'text-status-paid' : 'text-status-pending'}`} />
+                <span className={`text-xs ${stats.totalChange >= 0 ? 'text-status-paid' : 'text-status-pending'}`}>
+                  {stats.totalChange >= 0 ? '+' : ''}{stats.totalChange}%
+                </span>
                 <span className="text-xs text-muted-foreground">vs mes anterior</span>
               </div>
             </CardContent>
@@ -170,7 +247,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                2
+                {pendingExpenses.length}
               </div>
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-xs text-muted-foreground">Esta semana</span>
@@ -204,24 +281,28 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                      {activity.type === "expense" && <TrendingDown className="h-4 w-4 text-status-pending" />}
-                      {activity.type === "payment" && <CheckCircle2 className="h-4 w-4 text-status-paid" />}
-                      {activity.type === "document" && <div className="w-2 h-2 rounded-full bg-primary" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">
-                        {activity.title}
-                        {activity.amount && (
-                          <span className="font-mono ml-1">{formatCurrency(activity.amount)}</span>
+                {activities.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No hay actividad reciente
+                  </p>
+                ) : (
+                  activities.map((activity: { id: string; title: string; time: string; type: string }) => (
+                    <div key={activity.id} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                        {activity.type === "expense_created" && <TrendingDown className="h-4 w-4 text-status-pending" />}
+                        {activity.type === "payment_made" && <CheckCircle2 className="h-4 w-4 text-status-paid" />}
+                        {activity.type === "split_assigned" && <AlertCircle className="h-4 w-4 text-status-assigned" />}
+                        {!['expense_created', 'payment_made', 'split_assigned'].includes(activity.type) && (
+                          <div className="w-2 h-2 rounded-full bg-primary" />
                         )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{activity.title}</p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -236,57 +317,56 @@ export default function DashboardPage() {
             </a>
           </div>
           <div className="grid gap-3">
-            {recentExpenses.map((expense) => (
-              <ExpenseCard key={expense.id} expense={expense as any} />
-            ))}
+            {recentExpenses.length === 0 ? (
+              <Card className="card-premium border-none">
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">No hay gastos registrados</p>
+                </CardContent>
+              </Card>
+            ) : (
+              recentExpenses.map((expense: ExpenseWithRelations) => (
+                <ExpenseCard key={expense.id} expense={expense as any} />
+              ))
+            )}
           </div>
         </div>
 
-        {/* Pending Expenses Priority */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-status-pending" />
-              Pendientes de Pago
-            </h2>
+        {/* Pending Expenses */}
+        {pendingExpenses.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-status-pending" />
+                Pendientes de Pago
+              </h2>
+            </div>
+            <Card className="card-premium border-none">
+              <CardContent className="p-0">
+                <div className="divide-y divide-border/50">
+                  {pendingExpenses.map((expense: Expense) => (
+                    <div key={expense.id} className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-status-pending" />
+                        <div>
+                          <p className="font-medium text-foreground">{expense.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Vence: {expense.dueDate ? formatDateRelative(expense.dueDate) : 'Sin fecha'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-mono font-semibold">{formatCurrency(Number(expense.amount))}</span>
+                        <button className="px-4 py-2 bg-status-paid/20 text-status-paid rounded-lg text-sm font-medium hover:bg-status-paid/30 transition-colors">
+                          Pagar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <Card className="card-premium border-none">
-            <CardContent className="p-0">
-              <div className="divide-y divide-border/50">
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-status-pending" />
-                    <div>
-                      <p className="font-medium text-foreground">Arriendo Dpto</p>
-                      <p className="text-sm text-muted-foreground">Vence: Mañana</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-mono font-semibold">{formatCurrency(450000)}</span>
-                    <button className="px-4 py-2 bg-status-paid/20 text-status-paid rounded-lg text-sm font-medium hover:bg-status-paid/30 transition-colors">
-                      Pagar
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-status-assigned" />
-                    <div>
-                      <p className="font-medium text-foreground">Internet Hogar</p>
-                      <p className="text-sm text-muted-foreground">Vence: 3 días</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-mono font-semibold">{formatCurrency(35000)}</span>
-                    <button className="px-4 py-2 bg-status-assigned/20 text-status-assigned rounded-lg text-sm font-medium hover:bg-status-assigned/30 transition-colors">
-                      Asignar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        )}
       </div>
     </DashboardLayout>
   )
