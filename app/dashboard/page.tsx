@@ -343,7 +343,7 @@ export default async function DashboardPage() {
             <Card className="card-premium border-none">
               <CardContent className="p-0">
                 <div className="divide-y divide-border/50">
-                  {pendingExpenses.map((expense: Expense) => (
+                  {pendingExpenses.map((expense: any) => (
                     <div key={expense.id} className="flex items-center justify-between p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-status-pending" />

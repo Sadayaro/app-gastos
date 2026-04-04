@@ -77,7 +77,7 @@ async function getBranches(): Promise<BranchWithStats[]> {
     },
   })
 
-  return branches.map(branch => ({
+  return branches.map((branch: typeof branches[0]) => ({
     id: branch.id,
     name: branch.name,
     type: branch.type,
@@ -85,7 +85,7 @@ async function getBranches(): Promise<BranchWithStats[]> {
     color: branch.color,
     currency: branch.currency,
     isActive: branch.isActive,
-    monthlyTotal: branch.expenses.reduce((sum, e) => sum + Number(e.amount), 0),
+    monthlyTotal: branch.expenses.reduce((sum: number, e: typeof branch.expenses[0]) => sum + Number(e.amount), 0),
     expenseCount: branch._count.expenses,
     memberCount: branch._count.members,
   }))
