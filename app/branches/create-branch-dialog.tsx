@@ -33,20 +33,36 @@ const colors = ["#6366f1", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", "#ef4444"
 
 export default function CreateBranchDialog() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedColor, setSelectedColor] = useState(colors[0])
+  const [branchType, setBranchType] = useState("")
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    formData.append("color", selectedColor)
+    setIsSubmitting(true)
     
-    const response = await fetch('/api/branches', {
-      method: 'POST',
-      body: formData,
-    })
-    if (response.ok) {
-      setIsOpen(false)
-      window.location.reload()
+    const formData = new FormData(e.currentTarget)
+    formData.set("type", branchType)
+    formData.set("color", selectedColor)
+    
+    try {
+      const response = await fetch('/api/branches', {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (response.ok) {
+        setIsOpen(false)
+        setBranchType("")
+        window.location.reload()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error al crear sucursal')
+      }
+    } catch (error) {
+      alert('Error de conexión')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -78,7 +94,7 @@ export default function CreateBranchDialog() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="type">Tipo</Label>
-              <Select name="type" required>
+              <Select value={branchType} onValueChange={(v) => setBranchType(v || "")} required>
                 <SelectTrigger className="bg-secondary border-none">
                   <SelectValue placeholder="Selecciona un tipo" />
                 </SelectTrigger>
@@ -93,6 +109,7 @@ export default function CreateBranchDialog() {
                   ))}
                 </SelectContent>
               </Select>
+              <input type="hidden" name="type" value={branchType} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Descripción (opcional)</Label>
@@ -122,10 +139,11 @@ export default function CreateBranchDialog() {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="btn-gradient">
-              Crear Sucursal
+            <Button type="submit" className="btn-gradient" disabled={isSubmitting}>
+              {isSubmitting ? 'Creando...' : 'Crear Sucursal'}
             </Button>
           </DialogFooter>
+          <input type="hidden" name="color" value={selectedColor} />
         </form>
       </DialogContent>
     </Dialog>

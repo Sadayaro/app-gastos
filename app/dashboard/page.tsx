@@ -11,6 +11,7 @@ import {
   ArrowUpRight,
 } from "lucide-react"
 import { ExpenseCard } from "@/components/expenses/expense-card"
+import CreateIncomeDialog from "./create-income-dialog"
 
 export const dynamic = 'force-dynamic'
 
@@ -191,6 +192,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <CreateIncomeDialog />
             <span className="text-sm text-muted-foreground hidden sm:inline">Período:</span>
             <select className="bg-secondary border-none rounded-lg px-3 py-2 text-sm">
               <option>Enero 2026</option>

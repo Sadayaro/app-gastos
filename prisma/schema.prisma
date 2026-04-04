@@ -63,6 +63,7 @@ model Branch {
   expenses    Expense[]
   documents   Document[]
   activities  Activity[]
+  incomes     Income[]
 
   @@map("branches")
 }
@@ -240,4 +241,27 @@ model Activity {
 
   @@index([branchId, createdAt])
   @@map("activities")
+}
+
+// 9. INGRESOS (Revenue tracking)
+model Income {
+  id          String    @id @default(uuid())
+  branchId    String    @map("branch_id")
+  createdBy   String    @map("created_by")
+  
+  title       String
+  description String?
+  amount      Decimal   @db.Decimal(15, 2)
+  currency    String    @default("CLP")
+  source      String    // 'salary', 'freelance', 'investment', 'other'
+  incomeDate  DateTime  @map("income_date")
+  isRecurring Boolean   @default(false) @map("is_recurring")
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, incomeDate])
+  @@map("incomes")
 }
