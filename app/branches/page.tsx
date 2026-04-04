@@ -99,11 +99,9 @@ export default function BranchesPage() {
             </p>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="btn-gradient">
-                <Plus className="h-4 w-4 mr-2" />
-                Nueva Sucursal
-              </Button>
+            <DialogTrigger render={<Button className="btn-gradient" />}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Sucursal
             </DialogTrigger>
             <DialogContent className="card-premium border-none">
               <DialogHeader>
