@@ -10,26 +10,33 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ collapsed }: ThemeToggleProps) {
-  const { resolvedTheme, toggleTheme } = useTheme()
+  const { theme, toggleTheme } = useTheme()
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleTheme()
+  }
 
   return (
     <Button
+      type="button"
       variant="ghost"
-      size="icon"
-      onClick={toggleTheme}
+      size={collapsed ? "icon" : "default"}
+      onClick={handleClick}
       className={cn(
-        "text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent",
-        collapsed && "w-full"
+        "text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent justify-start",
+        collapsed && "w-full justify-center"
       )}
     >
-      {resolvedTheme === "dark" ? (
+      {theme === "dark" ? (
         <Sun className="h-4 w-4" />
       ) : (
         <Moon className="h-4 w-4" />
       )}
       {!collapsed && (
         <span className="ml-2 text-sm">
-          {resolvedTheme === "dark" ? "Modo claro" : "Modo oscuro"}
+          {theme === "dark" ? "Modo claro" : "Modo oscuro"}
         </span>
       )}
     </Button>
