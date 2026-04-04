@@ -12,6 +12,8 @@ import {
 } from "lucide-react"
 import { ExpenseCard } from "@/components/expenses/expense-card"
 
+export const dynamic = 'force-dynamic'
+
 // Types based on Prisma schema
 interface Expense {
   id: string

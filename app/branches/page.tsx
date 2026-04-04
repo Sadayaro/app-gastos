@@ -34,6 +34,8 @@ import Link from "next/link"
 import { revalidatePath } from "next/cache"
 import CreateBranchDialog from "./create-branch-dialog"
 
+export const dynamic = 'force-dynamic'
+
 const branchTypes = [
   { value: "home", label: "Hogar", icon: Home },
   { value: "office", label: "Oficina", icon: Briefcase },

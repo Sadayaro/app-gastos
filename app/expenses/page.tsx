@@ -16,6 +16,8 @@ import { prisma } from "@/lib/db/prisma"
 import { formatCurrency } from "@/lib/utils"
 import CreateExpenseDialog from "./create-expense-dialog"
 
+export const dynamic = 'force-dynamic'
+
 interface ExpenseWithCategory {
   id: string
   title: string
