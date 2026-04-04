@@ -63,6 +63,23 @@ interface ActivityWithUser extends Activity {
 }
 
 async function getDashboardStats() {
+  // Return mock data if prisma is not initialized (build time)
+  if (!process.env.DATABASE_URL) {
+    return {
+      stats: {
+        totalMonthly: 0,
+        pendingAmount: 0,
+        paidThisMonth: 0,
+        pendingCount: 0,
+        budgetUsedPercent: 0,
+        totalChange: 0,
+      },
+      recentExpenses: [],
+      pendingExpenses: [],
+      activities: [],
+    }
+  }
+  
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)

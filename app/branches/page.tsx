@@ -55,6 +55,11 @@ interface BranchWithStats {
 }
 
 async function getBranches(): Promise<BranchWithStats[]> {
+  // Return empty array if prisma is not initialized (build time)
+  if (!process.env.DATABASE_URL) {
+    return []
+  }
+  
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 

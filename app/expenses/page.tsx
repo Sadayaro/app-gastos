@@ -30,6 +30,11 @@ interface ExpenseWithCategory {
 }
 
 async function getExpenses(): Promise<ExpenseWithCategory[]> {
+  // Return empty array if prisma is not initialized (build time)
+  if (!process.env.DATABASE_URL) {
+    return []
+  }
+  
   const expenses = await prisma.expense.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
