@@ -12,14 +12,25 @@ function getPrismaClient(): PrismaClient {
     return globalForPrisma.prisma
   }
 
+  // Use POSTGRES_PRISMA_URL from Supabase (set by Vercel integration)
+  // Fallback to DATABASE_URL for local development
+  const databaseUrl = process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL
+
+  // In production, database URL is required
+  if (process.env.NODE_ENV === 'production') {
+    if (!databaseUrl) {
+      throw new Error('POSTGRES_PRISMA_URL or DATABASE_URL environment variable is required in production')
+    }
+  }
+
   // During build without valid DB, return a mock client
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL === '') {
-    console.warn('DATABASE_URL not set, using mock Prisma client')
+  if (!databaseUrl || databaseUrl === '') {
+    console.warn('Database URL not set, using mock Prisma client')
     return createMockPrismaClient()
   }
 
   // Create pool and adapter for Prisma 7.x
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+  const pool = new Pool({ connectionString: databaseUrl })
   const adapter = new PrismaPg(pool)
   
   const client = new PrismaClient({

@@ -1,5 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+The following environment variables are required:
+
+- `DATABASE_URL` - PostgreSQL connection string (required in production)
+  Example: `postgresql://user:pass@host:5432/db?sslmode=require`
+
+## Deployment
+
+### Vercel Setup
+
+1. Go to your Vercel Dashboard → Project Settings → Environment Variables
+2. Add `DATABASE_URL` with your PostgreSQL connection string
+3. Redeploy the application
+
 ## Getting Started
 
 First, run the development server:
