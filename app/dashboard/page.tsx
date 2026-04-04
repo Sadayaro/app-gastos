@@ -113,7 +113,7 @@ async function getDashboardStats() {
         category: true,
         branch: true,
       },
-    }) as Promise<ExpenseWithRelations[]>,
+    }) as unknown as Promise<ExpenseWithRelations[]>,
     prisma.expense.findMany({
       where: {
         status: 'pending',
@@ -128,7 +128,7 @@ async function getDashboardStats() {
       include: {
         user: { select: { firstName: true, lastName: true } },
       },
-    }) as Promise<ActivityWithUser[]>,
+    }) as unknown as Promise<ActivityWithUser[]>,
   ])
 
   const currentTotal = Number(totalThisMonth._sum.amount || 0)
