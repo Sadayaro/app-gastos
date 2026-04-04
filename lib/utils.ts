@@ -37,6 +37,12 @@ export function formatDateRelative(date: Date | string): string {
   return formatDate(date)
 }
 
+export function formatDistanceToNow(date: Date | string, options?: { addSuffix?: boolean }): string {
+  const result = formatDateRelative(date)
+  if (options?.addSuffix) return result
+  return result.replace("Hace ", "")
+}
+
 export function calculatePercentage(value: number, total: number): number {
   if (total === 0) return 0
   return Math.round((value / total) * 100)
