@@ -41,7 +41,7 @@ async function getExpenses(): Promise<ExpenseWithCategory[]> {
   return expenses.map(e => ({
     ...e,
     amount: Number(e.amount),
-  }))
+  })) as unknown as ExpenseWithCategory[]
 }
 
 export default async function ExpensesPage({ searchParams }: { searchParams: { status?: string; search?: string } }) {
