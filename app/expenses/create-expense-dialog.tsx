@@ -23,15 +23,37 @@ import { Plus } from "lucide-react"
 
 export default function CreateExpenseDialog() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [categoryId, setCategoryId] = useState("")
+  const [branchId, setBranchId] = useState("")
 
-  async function handleSubmit(formData: FormData) {
-    const response = await fetch('/api/expenses', {
-      method: 'POST',
-      body: formData,
-    })
-    if (response.ok) {
-      setIsOpen(false)
-      window.location.reload()
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setIsSubmitting(true)
+    
+    const formData = new FormData(e.currentTarget)
+    formData.set("categoryId", categoryId)
+    formData.set("branchId", branchId)
+    
+    try {
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (response.ok) {
+        setIsOpen(false)
+        setCategoryId("")
+        setBranchId("")
+        window.location.reload()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error al crear gasto')
+      }
+    } catch (error) {
+      alert('Error de conexión')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -43,7 +65,7 @@ export default function CreateExpenseDialog() {
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="card-premium border-none">
-          <form action={handleSubmit}>
+          <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle className="text-xl">Crear Nuevo Gasto</DialogTitle>
               <DialogDescription className="text-muted-foreground">
@@ -75,7 +97,7 @@ export default function CreateExpenseDialog() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Categoría</Label>
-                  <Select name="categoryId">
+                  <Select value={categoryId} onValueChange={(v) => setCategoryId(v || "")}>
                     <SelectTrigger className="bg-secondary border-none">
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
@@ -86,11 +108,12 @@ export default function CreateExpenseDialog() {
                       <SelectItem value="services">Servicios</SelectItem>
                     </SelectContent>
                   </Select>
+                  <input type="hidden" name="categoryId" value={categoryId} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="branch">Sucursal</Label>
-                <Select name="branchId" required>
+                <Select value={branchId} onValueChange={(v) => setBranchId(v || "")} required>
                   <SelectTrigger className="bg-secondary border-none">
                     <SelectValue placeholder="Seleccionar sucursal" />
                   </SelectTrigger>
@@ -99,14 +122,15 @@ export default function CreateExpenseDialog() {
                     <SelectItem value="2">Oficina Centro</SelectItem>
                   </SelectContent>
                 </Select>
+                <input type="hidden" name="branchId" value={branchId} />
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="btn-gradient">
-                Crear Gasto
+              <Button type="submit" className="btn-gradient" disabled={isSubmitting}>
+                {isSubmitting ? 'Creando...' : 'Crear Gasto'}
               </Button>
             </DialogFooter>
           </form>
