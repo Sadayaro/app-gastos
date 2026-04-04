@@ -35,9 +35,11 @@ export default function CreateBranchDialog() {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedColor, setSelectedColor] = useState(colors[0])
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
     formData.append("color", selectedColor)
-    // Submit to server action
+    
     const response = await fetch('/api/branches', {
       method: 'POST',
       body: formData,
