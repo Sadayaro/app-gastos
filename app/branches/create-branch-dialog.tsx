@@ -49,16 +49,13 @@ export default function CreateBranchDialog() {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger>
-        {({ open }) => (
-          <Button onClick={() => setIsOpen(true)} className="btn-gradient">
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Sucursal
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="card-premium border-none">
+    <>
+      <Button onClick={() => setIsOpen(true)} className="btn-gradient">
+        <Plus className="h-4 w-4 mr-2" />
+        Nueva Sucursal
+      </Button>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="card-premium border-none">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-xl">Crear Nueva Sucursal</DialogTitle>
@@ -130,5 +127,6 @@ export default function CreateBranchDialog() {
         </form>
       </DialogContent>
     </Dialog>
+    </>
   )
 }
