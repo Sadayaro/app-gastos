@@ -93,10 +93,10 @@ export default function DocumentsPage() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Documentos</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Documentos</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Gestiona boletas, facturas y comprobantes
             </p>
           </div>
@@ -171,7 +171,7 @@ export default function DocumentsPage() {
                 value={typeFilter}
                 onValueChange={(val) => setTypeFilter(val || "all")}
               >
-                <SelectTrigger className="w-[180px] bg-secondary border-none">
+                <SelectTrigger className="w-full sm:w-[180px] bg-secondary border-none">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Tipo de archivo" />
                 </SelectTrigger>

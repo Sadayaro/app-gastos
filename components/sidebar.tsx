@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Plus,
   LogOut,
+  X,
+  Menu,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -32,16 +34,39 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
-        collapsed ? "w-16" : "w-64",
-        className
+    <>
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 lg:hidden"
+        onClick={() => setMobileOpen(true)}
+      >
+        <Menu className="h-6 w-6" />
+      </Button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
-    >
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+          "-translate-x-full lg:translate-x-0",
+          mobileOpen && "translate-x-0",
+          collapsed ? "w-16" : "w-64",
+          className
+        )}
+      >
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
@@ -60,10 +85,20 @@ export function Sidebar({ className }: SidebarProps) {
               <span className="text-white font-bold text-sm">F</span>
             </div>
           )}
+          {/* Mobile Close Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-sidebar-foreground"
+            className="h-8 w-8 text-sidebar-foreground lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+          {/* Desktop Collapse Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-sidebar-foreground hidden lg:flex"
             onClick={() => setCollapsed(!collapsed)}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -93,6 +128,7 @@ export function Sidebar({ className }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
@@ -135,5 +171,6 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
       </div>
     </aside>
+    </>
   )
 }

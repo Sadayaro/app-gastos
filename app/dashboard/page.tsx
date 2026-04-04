@@ -181,15 +181,15 @@ export default async function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Resumen financiero de todas tus sucursales
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Período:</span>
+            <span className="text-sm text-muted-foreground hidden sm:inline">Período:</span>
             <select className="bg-secondary border-none rounded-lg px-3 py-2 text-sm">
               <option>Enero 2026</option>
               <option>Diciembre 2025</option>
@@ -352,7 +352,7 @@ export default async function DashboardPage() {
         {pendingExpenses.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-status-pending" />
                 Pendientes de Pago
               </h2>
@@ -361,19 +361,19 @@ export default async function DashboardPage() {
               <CardContent className="p-0">
                 <div className="divide-y divide-border/50">
                   {pendingExpenses.map((expense: any) => (
-                    <div key={expense.id} className="flex items-center justify-between p-4">
+                    <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-status-pending" />
-                        <div>
-                          <p className="font-medium text-foreground">{expense.title}</p>
+                        <div className="w-2 h-2 rounded-full bg-status-pending flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">{expense.title}</p>
                           <p className="text-sm text-muted-foreground">
                             Vence: {expense.dueDate ? formatDateRelative(expense.dueDate) : 'Sin fecha'}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-between sm:justify-end gap-4">
                         <span className="font-mono font-semibold">{formatCurrency(Number(expense.amount))}</span>
-                        <button className="px-4 py-2 bg-status-paid/20 text-status-paid rounded-lg text-sm font-medium hover:bg-status-paid/30 transition-colors">
+                        <button className="px-4 py-2 bg-status-paid/20 text-status-paid rounded-lg text-sm font-medium hover:bg-status-paid/30 transition-colors whitespace-nowrap">
                           Pagar
                         </button>
                       </div>

@@ -135,10 +135,10 @@ export default async function BranchesPage() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Sucursales</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Sucursales</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Gestiona tus espacios y sus flujos de gastos
             </p>
           </div>
@@ -217,7 +217,7 @@ export default async function BranchesPage() {
             <CardTitle className="text-lg">Resumen Consolidado</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-primary" />

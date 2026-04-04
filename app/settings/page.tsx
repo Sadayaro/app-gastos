@@ -32,8 +32,8 @@ export default function SettingsPage() {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Configuración</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configuración</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Personaliza tu experiencia y gestiona tu cuenta
           </p>
         </div>

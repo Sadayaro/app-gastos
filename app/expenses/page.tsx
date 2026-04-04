@@ -68,10 +68,10 @@ export default async function ExpensesPage({ searchParams }: { searchParams: { s
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Gastos</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gastos</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Gestiona todos tus gastos en un solo lugar
             </p>
           </div>
@@ -92,7 +92,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: { s
                 />
               </div>
               <Select name="status" defaultValue={statusFilter}>
-                <SelectTrigger className="w-[180px] bg-secondary border-none">
+                <SelectTrigger className="w-full sm:w-[180px] bg-secondary border-none">
                   <SlidersHorizontal className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Filtrar por estado" />
                 </SelectTrigger>
