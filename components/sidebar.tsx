@@ -16,6 +16,7 @@ import {
   Plus,
   LogOut,
 } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -109,6 +110,7 @@ export function Sidebar({ className }: SidebarProps) {
 
         {/* User & Logout */}
         <div className="border-t border-sidebar-border p-4 space-y-2">
+          <ThemeToggle collapsed={collapsed} />
           {!collapsed && (
             <div className="flex items-center gap-3 px-2 py-2">
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
