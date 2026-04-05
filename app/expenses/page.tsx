@@ -23,12 +23,10 @@ interface ExpenseWithCategory {
   title: string
   amount: number
   currency: string
-  status: 'pending' | 'funds_assigned' | 'paid' | 'cancelled'
+  status: 'pending' | 'upcoming' | 'paid' | 'overdue'
   expenseDate: Date
   dueDate: Date | null
-  isSplit: boolean
   category: { name: string; color: string } | null
-  branch: { name: string } | null
 }
 
 async function getExpenses(): Promise<ExpenseWithCategory[]> {
@@ -41,7 +39,6 @@ async function getExpenses(): Promise<ExpenseWithCategory[]> {
     orderBy: { createdAt: 'desc' },
     include: {
       category: { select: { name: true, color: true } },
-      branch: { select: { name: true } },
     },
   })
   

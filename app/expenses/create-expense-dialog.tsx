@@ -25,7 +25,6 @@ export default function CreateExpenseDialog() {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categoryId, setCategoryId] = useState("")
-  const [branchId, setBranchId] = useState("")
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -33,7 +32,6 @@ export default function CreateExpenseDialog() {
     
     const formData = new FormData(e.currentTarget)
     formData.set("categoryId", categoryId)
-    formData.set("branchId", branchId)
     
     try {
       const response = await fetch('/api/expenses', {
@@ -44,7 +42,6 @@ export default function CreateExpenseDialog() {
       if (response.ok) {
         setIsOpen(false)
         setCategoryId("")
-        setBranchId("")
         window.location.reload()
       } else {
         const error = await response.json()
@@ -69,7 +66,7 @@ export default function CreateExpenseDialog() {
             <DialogHeader>
               <DialogTitle className="text-xl">Crear Nuevo Gasto</DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                Registra un nuevo gasto para tu sucursal
+                Registra un nuevo gasto
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -102,27 +99,28 @@ export default function CreateExpenseDialog() {
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="housing">Vivienda</SelectItem>
-                      <SelectItem value="food">Alimentación</SelectItem>
-                      <SelectItem value="transport">Transporte</SelectItem>
+                      <SelectItem value="home">Hogar</SelectItem>
                       <SelectItem value="services">Servicios</SelectItem>
+                      <SelectItem value="entertainment">Entretenimiento</SelectItem>
+                      <SelectItem value="education">Educación</SelectItem>
+                      <SelectItem value="health">Salud</SelectItem>
+                      <SelectItem value="transport">Transporte</SelectItem>
+                      <SelectItem value="food">Alimentación</SelectItem>
+                      <SelectItem value="shopping">Compras</SelectItem>
+                      <SelectItem value="other">Otros</SelectItem>
                     </SelectContent>
                   </Select>
                   <input type="hidden" name="categoryId" value={categoryId} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="branch">Sucursal</Label>
-                <Select value={branchId} onValueChange={(v) => setBranchId(v || "")} required>
-                  <SelectTrigger className="bg-secondary border-none">
-                    <SelectValue placeholder="Seleccionar sucursal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Casa Principal</SelectItem>
-                    <SelectItem value="2">Oficina Centro</SelectItem>
-                  </SelectContent>
-                </Select>
-                <input type="hidden" name="branchId" value={branchId} />
+                <Label htmlFor="dueDate">Fecha de vencimiento</Label>
+                <Input
+                  id="dueDate"
+                  name="dueDate"
+                  type="date"
+                  className="bg-secondary border-none"
+                />
               </div>
             </div>
             <DialogFooter>

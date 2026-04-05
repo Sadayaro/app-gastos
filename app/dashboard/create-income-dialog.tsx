@@ -31,16 +31,10 @@ const incomeSources = [
   { value: "other", label: "Otro" },
 ]
 
-interface CreateIncomeDialogProps {
-  branchId?: string
-  branches?: { id: string; name: string }[]
-}
-
-export default function CreateIncomeDialog({ branchId, branches }: CreateIncomeDialogProps) {
+export default function CreateIncomeDialog() {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [source, setSource] = useState("")
-  const [selectedBranchId, setSelectedBranchId] = useState(branchId || "")
   const [isRecurring, setIsRecurring] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -49,7 +43,6 @@ export default function CreateIncomeDialog({ branchId, branches }: CreateIncomeD
     
     const formData = new FormData(e.currentTarget)
     formData.set("source", source)
-    formData.set("branchId", selectedBranchId)
     formData.set("isRecurring", isRecurring ? "on" : "")
     
     try {
@@ -132,25 +125,6 @@ export default function CreateIncomeDialog({ branchId, branches }: CreateIncomeD
                   <input type="hidden" name="source" value={source} />
                 </div>
               </div>
-              {!branchId && branches && branches.length > 0 && (
-                <div className="space-y-2">
-                  <Label htmlFor="branchId">Sucursal</Label>
-                  <Select value={selectedBranchId} onValueChange={(v) => setSelectedBranchId(v || "")} required>
-                    <SelectTrigger className="bg-secondary border-none">
-                      <SelectValue placeholder="Seleccionar sucursal" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branches.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <input type="hidden" name="branchId" value={selectedBranchId} />
-                </div>
-              )}
-              {branchId && <input type="hidden" name="branchId" value={branchId} />}
               <div className="space-y-2">
                 <Label htmlFor="description">Descripción (opcional)</Label>
                 <Input
