@@ -1,21 +1,5 @@
 {
   "version": 2,
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "POSTGRES_PRISMA_URL": "@postgres_prisma_url",
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key"
-  },
-  "build": {
-    "env": {
-      "DATABASE_URL": "@database_url",
-      "POSTGRES_PRISMA_URL": "@postgres_prisma_url",
-      "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-      "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
