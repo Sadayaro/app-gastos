@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         categoryId,
         description,
         status: "pending",
-        dueDate: dueDate ? new Date(dueDate) : null,
+        dueDate: dueDate ? new Date(dueDate) : new Date(),
         isRecurring: isRecurring || false,
         recurrenceType,
         recurrenceEnd: recurrenceEnd ? new Date(recurrenceEnd) : null,
