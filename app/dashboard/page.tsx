@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PremiumDashboard } from "@/components/dashboard";
 import { ExpenseForm } from "@/components/expense-form";
 import { ExpenseStatus } from "@/lib/business-logic";
+import { DashboardLayout } from "@/components/dashboard/layout";
 
 interface Expense {
   id: string;
@@ -97,7 +98,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <>
+    <DashboardLayout>
       <PremiumDashboard
         expenses={expenses.map(e => ({
           ...e,
@@ -113,6 +114,6 @@ export default function DashboardPage() {
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleAddExpense}
       />
-    </>
+    </DashboardLayout>
   );
 }
