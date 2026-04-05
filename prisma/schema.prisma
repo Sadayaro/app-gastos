@@ -236,3 +236,30 @@ model UserPreference {
 
   @@map("user_preferences")
 }
+
+// 8. INGRESOS (Incomes)
+model Income {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  categoryId  String?   @map("category_id")
+
+  title       String
+  description String?
+  amount      Decimal   @db.Decimal(15, 2)
+  currency    String    @default("CLP")
+  source      String    // 'salary', 'freelance', 'investment', 'gift', 'other'
+
+  incomeDate  DateTime  @map("income_date")
+  isRecurring Boolean   @default(false) @map("is_recurring")
+  recurrenceType String? @map("recurrence_type")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category?  @relation(fields: [categoryId], references: [id])
+
+  @@index([userId, incomeDate])
+  @@map("incomes")
+}

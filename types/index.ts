@@ -11,51 +11,23 @@ export interface User {
   createdAt: Date
 }
 
-export interface Branch {
-  id: string
-  ownerId: string
-  name: string
-  type: 'home' | 'office' | 'vacation' | 'business'
-  description?: string
-  color: string
-  currency: string
-  isActive: boolean
-  settings: Record<string, unknown>
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface BranchMember {
-  id: string
-  branchId: string
-  userId: string
-  role: 'owner' | 'admin' | 'member' | 'viewer'
-  canCreateExpenses: boolean
-  canApprove: boolean
-  defaultSplitPercent?: number
-  joinedAt: Date
-}
-
 export interface Category {
   id: string
-  branchId: string
   name: string
   icon: string
   color: string
-  parentId?: string
+  type: 'expense' | 'income'
   isSystem: boolean
   budgetLimit?: number
   createdAt: Date
 }
 
-export type ExpenseStatus = 'pending' | 'funds_assigned' | 'paid' | 'cancelled'
-export type SplitType = 'equal' | 'percentage' | 'amount'
-export type PaymentMethod = 'cash' | 'transfer' | 'credit' | 'debit'
+export type ExpenseStatus = 'pending' | 'upcoming' | 'paid' | 'overdue'
+export type PaymentMethod = 'cash' | 'transfer' | 'credit' | 'debit' | 'check'
 
 export interface Expense {
   id: string
-  branchId: string
-  createdBy: string
+  userId: string
   categoryId?: string
   title: string
   description?: string
@@ -67,8 +39,11 @@ export interface Expense {
   paidAt?: Date
   paymentMethod?: PaymentMethod
   paidBy?: string
-  isSplit: boolean
-  splitType?: SplitType
+  isRecurring: boolean
+  recurrenceType?: string
+  hasDocument: boolean
+  alarmOffset: number
+  alarmTriggered: boolean
   tags: string[]
   location?: {
     lat: number
@@ -81,31 +56,19 @@ export interface Expense {
   updatedAt: Date
 }
 
-export type ExpenseSplitStatus = 'pending' | 'assigned' | 'paid'
-
-export interface ExpenseSplit {
-  id: string
-  expenseId: string
-  userId: string
-  amount: number
-  percentage?: number
-  status: ExpenseSplitStatus
-  assignedAt?: Date
-  paidAt?: Date
-}
-
 export interface Document {
   id: string
   expenseId?: string
-  branchId: string
-  uploadedBy: string
+  userId: string
   fileName: string
   fileType: string
   fileSize: bigint
   storageKey: string
+  storageUrl?: string
   thumbnailUrl?: string
-  previewUrl?: string
   extractedText?: string
+  extractedAmount?: number
+  extractedDate?: Date
   metadata: Record<string, unknown>
   isVerified: boolean
   createdAt: Date
@@ -113,15 +76,43 @@ export interface Document {
 
 export interface Activity {
   id: string
-  branchId?: string
   userId?: string
   type: string
-  entityType?: 'expense' | 'document' | 'payment'
+  entityType?: 'expense' | 'document' | 'alarm'
   entityId?: string
   title: string
   description?: string
   metadata: Record<string, unknown>
   createdAt: Date
+}
+
+export interface Alarm {
+  id: string
+  expenseId: string
+  userId: string
+  type: 'seven_days' | 'forty_eight_hours' | 'same_day' | 'overdue'
+  status: 'pending' | 'sent' | 'dismissed' | 'snoozed'
+  triggerAt: Date
+  sentAt?: Date
+  dismissedAt?: Date
+  pushSent: boolean
+  createdAt: Date
+}
+
+export interface Income {
+  id: string
+  userId: string
+  categoryId?: string
+  title: string
+  description?: string
+  amount: number
+  currency: string
+  source: string
+  incomeDate: Date
+  isRecurring: boolean
+  recurrenceType?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Dashboard Types

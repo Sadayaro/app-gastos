@@ -3,18 +3,22 @@ import { prisma } from "@/lib/db/prisma"
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData()
+    const body = await request.json()
     
-    const title = formData.get("title") as string
-    const amount = parseFloat(formData.get("amount") as string)
-    const source = formData.get("source") as string
-    const branchId = formData.get("branchId") as string
-    const description = formData.get("description") as string | null
-    const isRecurring = formData.get("isRecurring") === "on"
+    const {
+      title,
+      amount,
+      source,
+      categoryId,
+      description,
+      incomeDate,
+      isRecurring,
+      recurrenceType,
+    } = body
 
-    if (!title || isNaN(amount) || !source || !branchId) {
+    if (!title || typeof amount !== "number" || !source) {
       return NextResponse.json(
-        { error: "Faltan campos requeridos" },
+        { error: "Título, monto y fuente son requeridos" },
         { status: 400 }
       )
     }
@@ -24,12 +28,13 @@ export async function POST(request: NextRequest) {
         title,
         amount,
         source,
-        branchId,
+        categoryId,
         description,
-        isRecurring,
-        incomeDate: new Date(),
+        isRecurring: isRecurring || false,
+        recurrenceType,
+        incomeDate: incomeDate ? new Date(incomeDate) : new Date(),
         currency: "CLP",
-        createdBy: "temp-user-id", // TODO: Replace with actual auth
+        userId: "temp-user-id", // TODO: Replace with actual auth
       },
     })
 
@@ -46,11 +51,14 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const branchId = searchParams.get("branchId")
+    const userId = searchParams.get("userId")
     
     const incomes = await prisma.income.findMany({
-      where: branchId ? { branchId } : {},
+      where: userId ? { userId } : {},
       orderBy: { incomeDate: "desc" },
+      include: {
+        category: true,
+      },
     })
 
     return NextResponse.json(incomes)
