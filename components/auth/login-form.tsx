@@ -1,20 +1,48 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, Lock, Mail } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { TrendingUp, Lock, Mail, Loader2 } from "lucide-react"
 
 export function LoginForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
-    // TODO: Implementar autenticación
-    setTimeout(() => setIsLoading(false), 1000)
+    setError("")
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl,
+      })
+
+      if (result?.error) {
+        setError("Credenciales inválidas")
+      } else {
+        router.push(callbackUrl)
+        router.refresh()
+      }
+    } catch {
+      setError("Ocurrió un error al iniciar sesión")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -31,6 +59,11 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Correo electrónico</Label>
@@ -42,6 +75,8 @@ export function LoginForm() {
                 placeholder="tu@email.com"
                 className="pl-9 bg-secondary border-none"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
@@ -55,6 +90,8 @@ export function LoginForm() {
                 placeholder="••••••••"
                 className="pl-9 bg-secondary border-none"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>
@@ -63,7 +100,14 @@ export function LoginForm() {
             className="w-full btn-gradient"
             disabled={isLoading}
           >
-            {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Iniciando sesión...
+              </>
+            ) : (
+              "Iniciar sesión"
+            )}
           </Button>
         </form>
         

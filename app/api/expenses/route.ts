@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await request.json()
     
     const {
@@ -51,7 +57,7 @@ export async function POST(request: NextRequest) {
       await prisma.alarm.create({
         data: {
           expenseId: expense.id,
-          userId: "temp-user-id", // TODO: Replace with actual auth
+          userId: session.user.id,
           triggerAt: alarmDate,
           type: alarmOffset === 0 ? "same_day" : alarmOffset === 1 ? "forty_eight_hours" : "seven_days",
           status: "pending",
@@ -71,7 +77,13 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const expenses = await prisma.expense.findMany({
+      where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
       include: {
         category: true,

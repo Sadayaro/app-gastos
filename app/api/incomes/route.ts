@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await request.json()
     
     const {
@@ -34,7 +40,7 @@ export async function POST(request: NextRequest) {
         recurrenceType,
         incomeDate: incomeDate ? new Date(incomeDate) : new Date(),
         currency: "CLP",
-        userId: "temp-user-id", // TODO: Replace with actual auth
+        userId: session.user.id,
       },
     })
 
@@ -50,11 +56,13 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
     
     const incomes = await prisma.income.findMany({
-      where: userId ? { userId } : {},
+      where: { userId: session.user.id },
       orderBy: { incomeDate: "desc" },
       include: {
         category: true,
