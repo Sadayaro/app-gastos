@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { PremiumDashboard } from "@/components/dashboard";
 import { ExpenseForm } from "@/components/expense-form";
 import { ExpenseStatus } from "@/lib/business-logic";
-import { useSession } from "next-auth/react";
 
 interface Expense {
   id: string;
@@ -29,20 +28,13 @@ interface Expense {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
-    if (status === "authenticated") {
-      fetchExpenses();
-    }
-  }, [status, router]);
+    fetchExpenses();
+  }, []);
 
   async function fetchExpenses() {
     try {
@@ -96,7 +88,7 @@ export default function DashboardPage() {
     router.push(`/expenses/${id}`);
   };
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
