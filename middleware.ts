@@ -1,7 +1,33 @@
-import { authConfig } from "@/lib/auth"
-import NextAuth from "next-auth"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-export default NextAuth(authConfig).auth
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  
+  // Check for auth session cookie
+  const sessionCookie = request.cookies.get("next-auth.session-token") || 
+                       request.cookies.get("__Secure-next-auth.session-token")
+  
+  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register")
+  const isProtectedRoute = 
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/expenses") ||
+    pathname.startsWith("/incomes") ||
+    pathname.startsWith("/documents") ||
+    pathname.startsWith("/settings")
+
+  // Redirect unauthenticated users to login
+  if (isProtectedRoute && !sessionCookie) {
+    return NextResponse.redirect(new URL("/login", request.url))
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (isAuthRoute && sessionCookie) {
+    return NextResponse.redirect(new URL("/dashboard", request.url))
+  }
+
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: [
@@ -10,8 +36,7 @@ export const config = {
     "/incomes/:path*",
     "/documents/:path*",
     "/settings/:path*",
-    "/api/expenses/:path*",
-    "/api/incomes/:path*",
-    "/api/documents/:path*",
+    "/login",
+    "/register",
   ],
 }
