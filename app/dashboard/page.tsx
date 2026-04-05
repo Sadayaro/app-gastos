@@ -110,9 +110,9 @@ export default function DashboardPage() {
     setExpenses((prev) =>
       prev.map((e) =>
         e.id === id
-          ? { ...e, status: "paid" as ExpenseStatus, paidAt: new Date() }
+          ? { ...e, status: "paid" as ExpenseStatus, paidAt: new Date(), alarmTriggered: false }
           : e
-      )
+      ) as typeof prev
     );
   };
 
