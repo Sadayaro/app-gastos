@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { TrendingUp, Lock, Mail, Loader2 } from "lucide-react"
+import { TrendingUp, Lock, Mail, Loader2, User } from "lucide-react"
 
 export function LoginForm() {
   const router = useRouter()
@@ -40,6 +40,20 @@ export function LoginForm() {
       }
     } catch {
       setError("Ocurrió un error al iniciar sesión")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function bypassLogin() {
+    setIsLoading(true)
+    try {
+      // Establecer cookie manualmente para bypass
+      document.cookie = "next-auth.session-token=bypass-temp; path=/; max-age=86400"
+      router.push("/dashboard")
+      router.refresh()
+    } catch {
+      setError("Error al entrar")
     } finally {
       setIsLoading(false)
     }
@@ -109,11 +123,22 @@ export function LoginForm() {
               "Iniciar sesión"
             )}
           </Button>
+          
+          <Button 
+            type="button" 
+            variant="outline"
+            className="w-full"
+            onClick={bypassLogin}
+            disabled={isLoading}
+          >
+            <User className="mr-2 h-4 w-4" />
+            Entrar sin registro (temporal)
+          </Button>
         </form>
         
         <div className="mt-6 text-center text-sm text-muted-foreground">
           ¿No tienes cuenta?{" "}
-          <a href="#" className="text-primary hover:underline">
+          <a href="/register" className="text-primary hover:underline">
             Regístrate
           </a>
         </div>
