@@ -63,6 +63,7 @@ function createMockPrismaClient(): PrismaClient {
     expense: { ...mockData },
     category: { ...mockData },
     user: { ...mockData },
+    userPreference: { ...mockData },
     splitAssignment: { ...mockData },
     document: { ...mockData },
     $connect: async () => {},
