@@ -10,7 +10,7 @@ datasource db {
 }
 
 // =====================================================
-// MODELO DE DATOS: Sistema FinTech Premium
+// MODELO DE DATOS: Sistema de Control de Gastos Premium
 // =====================================================
 
 // 1. USUARIOS Y AUTENTICACIÓN
@@ -24,244 +24,215 @@ model User {
   phone          String?
   timezone       String    @default("America/Santiago")
   currencyPref   String    @default("CLP") @map("currency_pref")
-  isAdmin        Boolean   @default(false) @map("is_admin")
+  isAdmin        Boolean  @default(false) @map("is_admin")
   emailVerified  DateTime? @map("email_verified")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   lastLogin      DateTime? @map("last_login")
 
+  // Preferencias de notificación
+  notificationSettings Json @default("{\"sevenDays\": true, \"fortyEightHours\": true, \"sameDay\": true, \"pushEnabled\": true}") @map("notification_settings")
+  biometricEnabled Boolean @default(false) @map("biometric_enabled")
+
   // Relations
-  ownedBranches  Branch[]       @relation("BranchOwner")
-  memberships    BranchMember[]
   expenses       Expense[]      @relation("ExpenseCreator")
-  splits         ExpenseSplit[]
-  documents      Document[]     @relation("DocumentUploader")
-  activities     Activity[]
   paidExpenses   Expense[]      @relation("ExpensePayer")
+  documents      Document[]     @relation("DocumentUploader")
+  alarms         Alarm[]
+  activities     Activity[]
+  preference     UserPreference?
 
   @@map("users")
 }
 
-// 2. SUCURSALES / ESPACIOS (Multi-entidad)
-model Branch {
-  id          String   @id @default(uuid())
-  ownerId     String   @map("owner_id")
-  name        String
-  type        String   // 'home', 'office', 'vacation', 'business'
-  description String?
-  color       String   @default("#6366F1")
-  currency    String   @default("CLP")
-  isActive    Boolean  @default(true) @map("is_active")
-  settings    Json     @default("{}")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  owner       User           @relation("BranchOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members     BranchMember[]
-  categories  Category[]
-  expenses    Expense[]
-  documents   Document[]
-  activities  Activity[]
-  incomes     Income[]
-
-  @@map("branches")
-}
-
-// 3. MEMBRESÍAS DE USUARIOS EN SUCURSALES (M:N)
-model BranchMember {
-  id                  String   @id @default(uuid())
-  branchId            String   @map("branch_id")
-  userId              String   @map("user_id")
-  role                String   @default("member") // 'owner', 'admin', 'member', 'viewer'
-  canCreateExpenses   Boolean  @default(true) @map("can_create_expenses")
-  canApprove          Boolean  @default(false) @map("can_approve")
-  defaultSplitPercent Decimal? @map("default_split_percent")
-  joinedAt            DateTime @default(now()) @map("joined_at")
-
-  // Relations
-  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([branchId, userId])
-  @@map("branch_members")
-}
-
-// 4. CATEGORÍAS DE GASTOS (Por sucursal)
+// 2. CATEGORÍAS DE GASTOS
 model Category {
   id          String   @id @default(uuid())
-  branchId    String   @map("branch_id")
   name        String
   icon        String   @default("receipt")
   color       String   @default("#64748B")
-  parentId    String?  @map("parent_id")
+  type        String   @default("expense") // 'expense', 'income'
   isSystem    Boolean  @default(false) @map("is_system")
   budgetLimit Decimal? @map("budget_limit")
   createdAt   DateTime @default(now()) @map("created_at")
 
   // Relations
-  branch   Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  parent   Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[]  @relation("CategoryHierarchy")
   expenses Expense[]
 
   @@map("categories")
 }
 
-// 5. GASTOS (Core del sistema)
+// 3. GASTOS (Core del sistema premium)
 model Expense {
   id             String    @id @default(uuid())
-  branchId       String    @map("branch_id")
-  createdBy      String    @map("created_by")
+  userId         String    @map("user_id")
   categoryId     String?   @map("category_id")
-  
+
   // Datos del gasto
   title          String
   description    String?
   amount         Decimal   @db.Decimal(15, 2)
   currency       String    @default("CLP")
-  
-  // Ciclo de vida (Core requirement)
-  status         String    @default("pending") 
-  // 'pending', 'funds_assigned', 'paid', 'cancelled'
-  
-  // Fechas
-  expenseDate    DateTime  @map("expense_date")
-  dueDate        DateTime? @map("due_date")
-  paidAt         DateTime? @map("paid_at")
-  
+
+  // Estados de pago premium: 'paid', 'pending', 'overdue', 'upcoming'
+  status         String    @default("pending")
+
+  // Fechas importantes
+  expenseDate    DateTime  @map("expense_date")      // Fecha del gasto
+  dueDate        DateTime  @map("due_date")           // Fecha de vencimiento
+  paidAt         DateTime? @map("paid_at")             // Fecha de pago real
+
   // Método de pago
-  paymentMethod  String?   @map("payment_method") // 'cash', 'transfer', 'credit', 'debit'
-  paidBy         String?   @map("paid_by")
-  
-  // División
-  isSplit        Boolean   @default(false) @map("is_split")
-  splitType      String?   @map("split_type") // 'equal', 'percentage', 'amount'
-  
+  paymentMethod  String?   @map("payment_method") // 'cash', 'transfer', 'credit', 'debit', 'check'
+  paidBy         String?   @map("paid_by")          // Quién pagó (si es diferente al creador)
+
+  // Recurrencia
+  isRecurring    Boolean   @default(false) @map("is_recurring")
+  recurrenceType String?   @map("recurrence_type") // 'monthly', 'quarterly', 'yearly', 'weekly', 'biweekly'
+  recurrenceEnd  DateTime? @map("recurrence_end")   // Fecha fin de recurrencia
+  parentId       String?   @map("parent_id")         // Referencia al gasto padre si es recurrente
+
+  // Comprobantes y documentos
+  hasDocument    Boolean   @default(false) @map("has_document")
+  documents      Document[]
+
+  // Alarmas y notificaciones
+  alarmOffset    Int       @default(7) @map("alarm_offset") // Días antes para alerta (7, 2, 0)
+  alarmTriggered Boolean   @default(false) @map("alarm_triggered")
+
   // Metadata
   tags           String[]
   location       Json?
   metadata       Json      @default("{}")
-  
+
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  branch    Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  creator   User           @relation("ExpenseCreator", fields: [createdBy], references: [id])
-  category  Category?      @relation(fields: [categoryId], references: [id])
-  payer     User?          @relation("ExpensePayer", fields: [paidBy], references: [id])
-  splits    ExpenseSplit[]
-  documents Document[]
+  creator   User        @relation("ExpenseCreator", fields: [userId], references: [id])
+  category  Category?   @relation(fields: [categoryId], references: [id])
+  payer     User?       @relation("ExpensePayer", fields: [paidBy], references: [id])
+  alarms    Alarm[]
+  children  Expense[]   @relation("ExpenseRecurrence")
+  parent    Expense?    @relation("ExpenseRecurrence", fields: [parentId], references: [id])
 
-  @@index([branchId, expenseDate])
-  @@index([status])
+  @@index([userId, dueDate])
+  @@index([status, dueDate])
+  @@index([isRecurring, recurrenceEnd])
   @@map("expenses")
 }
 
-// 6. PARTICIPACIONES/DIVISIONES DE GASTOS
-model ExpenseSplit {
+// 4. ALARMAS Y NOTIFICACIONES
+model Alarm {
   id          String    @id @default(uuid())
   expenseId   String    @map("expense_id")
   userId      String    @map("user_id")
-  
-  // Monto asignado
-  amount      Decimal   @db.Decimal(15, 2)
-  percentage  Decimal?  @db.Decimal(5, 2)
-  
-  // Estado individual
-  status      String    @default("pending") // 'pending', 'assigned', 'paid'
-  
-  assignedAt  DateTime? @map("assigned_at")
-  paidAt      DateTime? @map("paid_at")
+
+  type        String    // 'seven_days', 'forty_eight_hours', 'same_day', 'overdue'
+  status      String    @default("pending") // 'pending', 'sent', 'dismissed', 'snoozed'
+  triggerAt   DateTime  @map("trigger_at")   // Cuándo debe dispararse
+  sentAt      DateTime? @map("sent_at")      // Cuándo se envió
+  dismissedAt DateTime? @map("dismissed_at")
+
+  // Notificación push
+  pushSent    Boolean   @default(false) @map("push_sent")
+  pushToken   String?   @map("push_token")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   // Relations
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([expenseId, userId])
-  @@index([userId, status])
-  @@map("expense_splits")
+  @@index([userId, status, triggerAt])
+  @@index([expenseId])
+  @@map("alarms")
 }
 
-// 7. BOVEDA DE DOCUMENTOS (Gestión de boletas)
+// 5. DOCUMENTOS Y COMPROBANTES
 model Document {
   id              String   @id @default(uuid())
   expenseId       String?  @map("expense_id")
-  branchId        String   @map("branch_id")
-  uploadedBy      String   @map("uploaded_by")
-  
+  userId          String   @map("user_id")
+
   // Archivo
   fileName        String   @map("file_name")
-  fileType        String   @map("file_type") // 'application/pdf', 'image/jpeg'
+  fileType        String   @map("file_type") // 'application/pdf', 'image/jpeg', 'image/png'
   fileSize        BigInt   @map("file_size")
   storageKey      String   @map("storage_key")
-  
+  storageUrl      String?  @map("storage_url")
+
   // Previsualización
   thumbnailUrl    String?  @map("thumbnail_url")
-  previewUrl      String?  @map("preview_url")
-  
+
   // OCR/Extracción
   extractedText   String?  @map("extracted_text")
+  extractedAmount Decimal? @map("extracted_amount")
+  extractedDate   DateTime? @map("extracted_date")
   metadata        Json     @default("{}")
-  
+
   // Estado
   isVerified      Boolean  @default(false) @map("is_verified")
-  
+
   createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
   expense Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
-  branch  Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  uploader User   @relation("DocumentUploader", fields: [uploadedBy], references: [id])
+  uploader User   @relation("DocumentUploader", fields: [userId], references: [id])
 
   @@index([expenseId])
   @@map("documents")
 }
 
-// 8. NOTIFICACIONES Y ACTIVIDAD
+// 6. ACTIVIDAD Y LOG
 model Activity {
   id          String    @id @default(uuid())
-  branchId    String?   @map("branch_id")
-  userId      String?   @map("user_id")
-  
-  type        String    // 'expense_created', 'payment_made', 'split_assigned', etc.
-  entityType  String?   @map("entity_type") // 'expense', 'document', 'payment'
+  userId      String    @map("user_id")
+
+  type        String    // 'expense_created', 'expense_paid', 'expense_overdue', 'alarm_triggered', 'document_uploaded'
+  entityType  String?   @map("entity_type") // 'expense', 'document', 'alarm'
   entityId    String?   @map("entity_id")
-  
+
   title       String
   description String?
   metadata    Json      @default("{}")
-  
+
   createdAt   DateTime  @default(now()) @map("created_at")
 
   // Relations
-  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([branchId, createdAt])
+  @@index([userId, createdAt])
   @@map("activities")
 }
 
-// 9. INGRESOS (Revenue tracking)
-model Income {
-  id          String    @id @default(uuid())
-  branchId    String    @map("branch_id")
-  createdBy   String    @map("created_by")
-  
-  title       String
-  description String?
-  amount      Decimal   @db.Decimal(15, 2)
-  currency    String    @default("CLP")
-  source      String    // 'salary', 'freelance', 'investment', 'other'
-  incomeDate  DateTime  @map("income_date")
-  isRecurring Boolean   @default(false) @map("is_recurring")
-  
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+// 7. CONFIGURACIÓN DE PREFERENCIAS DEL USUARIO
+model UserPreference {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
 
-  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  // Preferencias de UI
+  theme           String   @default("dark") // 'dark', 'light', 'system'
+  accentColor     String   @default("indigo") @map("accent_color") // 'indigo', 'emerald', 'amber', 'rose', 'violet'
+  compactMode     Boolean  @default(false) @map("compact_mode")
 
-  @@index([branchId, incomeDate])
-  @@map("incomes")
+  // Preferencias de notificación
+  emailEnabled    Boolean  @default(true) @map("email_enabled")
+  pushEnabled     Boolean  @default(true) @map("push_enabled")
+  sevenDaysAlert  Boolean  @default(true) @map("seven_days_alert")
+  fortyEightHoursAlert Boolean @default(true) @map("forty_eight_hours_alert")
+  sameDayAlert    Boolean  @default(true) @map("same_day_alert")
+  overdueAlert    Boolean  @default(true) @map("overdue_alert")
+
+  // Preferencias de calendario
+  calendarSync    Boolean  @default(false) @map("calendar_sync")
+  calendarProvider String? @map("calendar_provider") // 'google', 'apple', 'outlook'
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }

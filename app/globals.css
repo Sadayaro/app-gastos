@@ -130,14 +130,27 @@
   --ring: #6366f1;
   --radius: 0.75rem;
   
-  /* Financial Status Colors - Dark */
-  --status-pending: #fbbf24;
+  /* Premium Status Colors - Pastel Dark Mode */
+  --status-paid: #86efac;
+  --status-paid-bg: rgba(134, 239, 172, 0.15);
+  --status-paid-border: rgba(134, 239, 172, 0.3);
+  
+  --status-pending: #94a3b8;
+  --status-pending-bg: rgba(148, 163, 184, 0.15);
+  --status-pending-border: rgba(148, 163, 184, 0.3);
+  
+  --status-upcoming: #fcd34d;
+  --status-upcoming-bg: rgba(252, 211, 77, 0.15);
+  --status-upcoming-border: rgba(252, 211, 77, 0.3);
+  
+  --status-overdue: #fca5a5;
+  --status-overdue-bg: rgba(252, 165, 165, 0.15);
+  --status-overdue-border: rgba(252, 165, 165, 0.3);
+  
+  /* Legacy aliases for compatibility */
   --status-assigned: #60a5fa;
-  --status-paid: #34d399;
-  --status-alert: #f87171;
-  --status-pending-bg: rgba(251, 191, 36, 0.15);
   --status-assigned-bg: rgba(96, 165, 250, 0.15);
-  --status-paid-bg: rgba(52, 211, 153, 0.15);
+  --status-alert: #f87171;
   --status-alert-bg: rgba(248, 113, 113, 0.15);
   
   /* Charts - Dark */
@@ -208,5 +221,121 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Status badges premium */
+  .status-badge-paid {
+    @apply px-2.5 py-1 rounded-full text-xs font-medium;
+    background: var(--status-paid-bg);
+    color: var(--status-paid);
+    border: 1px solid var(--status-paid-border);
+  }
+  
+  .status-badge-pending {
+    @apply px-2.5 py-1 rounded-full text-xs font-medium;
+    background: var(--status-pending-bg);
+    color: var(--status-pending);
+    border: 1px solid var(--status-pending-border);
+  }
+  
+  .status-badge-upcoming {
+    @apply px-2.5 py-1 rounded-full text-xs font-medium;
+    background: var(--status-upcoming-bg);
+    color: var(--status-upcoming);
+    border: 1px solid var(--status-upcoming-border);
+  }
+  
+  .status-badge-overdue {
+    @apply px-2.5 py-1 rounded-full text-xs font-medium;
+    background: var(--status-overdue-bg);
+    color: var(--status-overdue);
+    border: 1px solid var(--status-overdue-border);
+  }
+
+  /* Swipe actions */
+  .swipe-container {
+    @apply relative overflow-hidden;
+    touch-action: pan-y;
+  }
+  
+  .swipe-content {
+    @apply relative z-10 transition-transform duration-200;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .swipe-actions {
+    @apply absolute inset-y-0 right-0 flex items-center;
+  }
+  
+  .swipe-action-paid {
+    @apply h-full flex items-center justify-center px-6;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+  
+  .swipe-action-delete {
+    @apply h-full flex items-center justify-center px-6;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+
+  /* Micro-interactions */
+  .micro-bounce {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .micro-bounce:active {
+    transform: scale(0.96);
+  }
+  
+  .glow-paid {
+    box-shadow: 0 0 20px rgba(134, 239, 172, 0.3);
+  }
+  
+  .glow-upcoming {
+    box-shadow: 0 0 20px rgba(252, 211, 77, 0.3);
+  }
+  
+  .glow-overdue {
+    box-shadow: 0 0 20px rgba(252, 165, 165, 0.4);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(252, 165, 165, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(252, 165, 165, 0.6);
+    }
+  }
+
+  /* Progress bars */
+  .progress-bar-bg {
+    @apply h-2 rounded-full bg-white/10 overflow-hidden;
+  }
+  
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-500;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Amount displays */
+  .amount-paid {
+    @apply font-semibold;
+    color: var(--status-paid);
+  }
+  
+  .amount-pending {
+    @apply font-semibold;
+    color: var(--status-pending);
+  }
+  
+  .amount-upcoming {
+    @apply font-semibold;
+    color: var(--status-upcoming);
+  }
+  
+  .amount-overdue {
+    @apply font-semibold;
+    color: var(--status-overdue);
   }
 }
