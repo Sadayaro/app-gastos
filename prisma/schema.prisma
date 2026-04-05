@@ -41,6 +41,7 @@ model User {
   alarms         Alarm[]
   activities     Activity[]
   preference     UserPreference?
+  incomes        Income[]
 
   @@map("users")
 }
@@ -58,6 +59,7 @@ model Category {
 
   // Relations
   expenses Expense[]
+  incomes  Income[]
 
   @@map("categories")
 }
