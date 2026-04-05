@@ -1,134 +1,121 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PremiumDashboard } from "@/components/dashboard";
 import { ExpenseForm } from "@/components/expense-form";
 import { ExpenseStatus } from "@/lib/business-logic";
+import { useSession } from "next-auth/react";
 
-// Datos de ejemplo para demo
-const MOCK_EXPENSES = [
-  {
-    id: "1",
-    title: "Arriendo Departamento",
-    amount: 450000,
-    currency: "CLP",
-    status: "pending" as ExpenseStatus,
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    category: { id: "home", name: "Hogar", color: "#8b5cf6", icon: "🏠" },
-    isRecurring: true,
-    recurrenceType: "monthly",
-    alarmTriggered: true,
-  },
-  {
-    id: "2",
-    title: "Luz y Gas",
-    amount: 45000,
-    currency: "CLP",
-    status: "upcoming" as ExpenseStatus,
-    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    category: { id: "services", name: "Servicios", color: "#06b6d4", icon: "⚡" },
-    isRecurring: true,
-    recurrenceType: "monthly",
-  },
-  {
-    id: "3",
-    title: "Internet Fibra",
-    amount: 25000,
-    currency: "CLP",
-    status: "paid" as ExpenseStatus,
-    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    paidAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-    category: { id: "services", name: "Servicios", color: "#06b6d4", icon: "⚡" },
-    isRecurring: true,
-    recurrenceType: "monthly",
-    hasDocument: true,
-  },
-  {
-    id: "4",
-    title: "Netflix + Spotify",
-    amount: 15000,
-    currency: "CLP",
-    status: "paid" as ExpenseStatus,
-    dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    paidAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    category: { id: "entertainment", name: "Entretenimiento", color: "#ec4899", icon: "🎮" },
-    isRecurring: true,
-    recurrenceType: "monthly",
-  },
-  {
-    id: "5",
-    title: "Curso de React Avanzado",
-    amount: 120000,
-    currency: "CLP",
-    status: "overdue" as ExpenseStatus,
-    dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    category: { id: "education", name: "Educación", color: "#10b981", icon: "📚" },
-    alarmTriggered: true,
-  },
-  {
-    id: "6",
-    title: "Supermercado Unimarc",
-    amount: 85000,
-    currency: "CLP",
-    status: "pending" as ExpenseStatus,
-    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-    category: { id: "food", name: "Alimentación", color: "#f97316", icon: "🍽️" },
-  },
-  {
-    id: "7",
-    title: "Bencina",
-    amount: 35000,
-    currency: "CLP",
-    status: "upcoming" as ExpenseStatus,
-    dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-    category: { id: "transport", name: "Transporte", color: "#f59e0b", icon: "🚗" },
-  },
-  {
-    id: "8",
-    title: "Seguro de Salud",
-    amount: 80000,
-    currency: "CLP",
-    status: "pending" as ExpenseStatus,
-    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-    category: { id: "health", name: "Salud", color: "#ef4444", icon: "🏥" },
-    isRecurring: true,
-    recurrenceType: "monthly",
-  },
-];
+interface Expense {
+  id: string;
+  title: string;
+  amount: number;
+  currency: string;
+  status: ExpenseStatus;
+  dueDate: string;
+  paidAt?: string;
+  category: {
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+  } | null;
+  isRecurring: boolean;
+  recurrenceType: string | null;
+  alarmTriggered: boolean;
+  hasDocument?: boolean;
+}
 
 export default function DashboardPage() {
-  const [expenses, setExpenses] = useState(MOCK_EXPENSES);
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const handleAddExpense = (data: any) => {
-    console.log("Nuevo gasto:", data);
-    // Aquí se conectaría con la API
-    setIsFormOpen(false);
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+    if (status === "authenticated") {
+      fetchExpenses();
+    }
+  }, [status, router]);
+
+  async function fetchExpenses() {
+    try {
+      const response = await fetch("/api/expenses");
+      if (response.ok) {
+        const data = await response.json();
+        setExpenses(data);
+      }
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const handleAddExpense = async (data: any) => {
+    try {
+      const response = await fetch("/api/expenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (response.ok) {
+        const newExpense = await response.json();
+        setExpenses((prev) => [newExpense, ...prev]);
+        setIsFormOpen(false);
+      }
+    } catch (error) {
+      console.error("Error creating expense:", error);
+    }
   };
 
-  const handleMarkAsPaid = (id: string) => {
-    setExpenses((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? { ...e, status: "paid" as ExpenseStatus, paidAt: new Date(), alarmTriggered: false }
-          : e
-      ) as typeof prev
-    );
+  const handleMarkAsPaid = async (id: string) => {
+    try {
+      const response = await fetch(`/api/expenses/${id}/pay`, { method: "POST" });
+      if (response.ok) {
+        setExpenses((prev) =>
+          prev.map((e) =>
+            e.id === id
+              ? { ...e, status: "paid" as ExpenseStatus, paidAt: new Date().toISOString() }
+              : e
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error marking as paid:", error);
+    }
   };
 
   const handleExpenseClick = (id: string) => {
-    console.log("Ver detalle de gasto:", id);
+    router.push(`/expenses/${id}`);
   };
+
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <>
       <PremiumDashboard
-        expenses={expenses}
+        expenses={expenses.map(e => ({
+          ...e,
+          dueDate: new Date(e.dueDate),
+          paidAt: e.paidAt ? new Date(e.paidAt) : undefined,
+        }))}
         onAddExpense={() => setIsFormOpen(true)}
         onExpenseClick={handleExpenseClick}
         onMarkAsPaid={handleMarkAsPaid}
       />
-
       <ExpenseForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
