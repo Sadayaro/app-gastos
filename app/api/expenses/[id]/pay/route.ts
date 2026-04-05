@@ -4,15 +4,16 @@ import { prisma } from "@/lib/db/prisma"
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const expenseId = params.id
+    const expenseId = id
 
     // Verify the expense belongs to the user
     const expense = await prisma.expense.findFirst({
