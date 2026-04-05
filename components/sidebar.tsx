@@ -5,10 +5,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { signOut } from "next-auth/react"
 import {
   LayoutDashboard,
   Receipt,
-  Building2,
+  Wallet,
   FileText,
   Settings,
   ChevronLeft,
@@ -19,11 +20,12 @@ import {
   Menu,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { NotificationSystem } from "./notification-system"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/expenses", label: "Gastos", icon: Receipt },
-  { href: "/branches", label: "Sucursales", icon: Building2 },
+  { href: "/incomes", label: "Ingresos", icon: Wallet },
   { href: "/documents", label: "Documentos", icon: FileText },
   { href: "/settings", label: "Configuración", icon: Settings },
 ]
@@ -164,6 +166,7 @@ export function Sidebar({ className }: SidebarProps) {
               "w-full justify-start text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent",
               collapsed && "justify-center px-2"
             )}
+            onClick={() => signOut()}
           >
             <LogOut className="h-4 w-4" />
             {!collapsed && <span className="ml-2">Cerrar sesión</span>}
