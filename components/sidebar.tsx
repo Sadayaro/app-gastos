@@ -45,7 +45,7 @@ export function Sidebar({ className }: SidebarProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="fixed top-4 left-4 z-50 md:hidden"
         onClick={() => setMobileOpen(true)}
       >
         <Menu className="h-6 w-6" />
@@ -54,7 +54,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -63,7 +63,7 @@ export function Sidebar({ className }: SidebarProps) {
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
-          "-translate-x-full lg:translate-x-0",
+          "-translate-x-full md:translate-x-0",
           mobileOpen && "translate-x-0",
           collapsed ? "w-16" : "w-64",
           className
@@ -91,7 +91,7 @@ export function Sidebar({ className }: SidebarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-sidebar-foreground lg:hidden"
+            className="h-8 w-8 text-sidebar-foreground md:hidden"
             onClick={() => setMobileOpen(false)}
           >
             <X className="h-5 w-5" />
@@ -100,7 +100,7 @@ export function Sidebar({ className }: SidebarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-sidebar-foreground hidden lg:flex"
+            className="h-8 w-8 text-sidebar-foreground hidden md:flex"
             onClick={() => setCollapsed(!collapsed)}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
