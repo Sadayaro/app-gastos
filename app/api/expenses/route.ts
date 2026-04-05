@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         recurrenceType,
         recurrenceEnd: recurrenceEnd ? new Date(recurrenceEnd) : null,
         alarmOffset: alarmOffset ?? 7,
-        createdBy: "temp-user-id", // TODO: Replace with actual auth
+        userId: "temp-user-id", // TODO: Replace with actual auth
       },
     })
 
